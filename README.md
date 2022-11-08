@@ -2,8 +2,8 @@
 
 This repository contains a [Moka cache][moka-cache] driver for the
 [Caffeine Simulator][caffeine-simulator]. The driver enables the Caffeine Simulator
-to run workloads against a Moka cache to generate [charts][moka-perf-charts] with
-hit vs. miss ratios.
+to run workloads against Moka cache (`moka::sync::Cache`) to measure cache hit vs.
+miss ratios and generate [charts][moka-perf-charts].
 
 [moka-cache]: https://github.com/moka-rs/moka
 [caffeine-simulator]: https://github.com/ben-manes/caffeine/wiki/Simulator
@@ -112,11 +112,12 @@ $ TRACE=arc:/path/to/trace/S3.lis
 ## The path to the directory containing the dynamic library:
 $ DRV_LIB=$SIM/caffeine-sim-drivers/moka-driver-rs/target/release
 
+$ cd $SIM/caffeine
 $ ./gradlew simulator:simulate -q \
-    -Dcaffeine.simulator.files.paths.0=$TRACE \
-    --maximumSize=100_000,200_000,300_000,400_000,500_000,600_000,700_000,800_000 \
-    --jvmArgs="-XX:+UseParallelGC,-Xmx8g,-Djava.library.path=$DRV_LIB" \
-    --theme=light
+      -Dcaffeine.simulator.files.paths.0=$TRACE \
+      --maximumSize=100_000,200_000,300_000,400_000,500_000,600_000,700_000,800_000 \
+      --jvmArgs="-XX:+UseParallelGC,-Xmx8g,-Djava.library.path=$DRV_LIB" \
+      --theme=light
 ```
 
 ## Modifying the Driver
