@@ -1,0 +1,21 @@
+diff --git a/simulator/src/main/java/com/github/benmanes/caffeine/cache/simulator/policy/Registry.java b/simulator/src/main/java/com/github/benmanes/caffeine/cache/simulator/policy/Registry.java
+index cf4f6b36..2882418e 100644
+--- a/simulator/src/main/java/com/github/benmanes/caffeine/cache/simulator/policy/Registry.java
++++ b/simulator/src/main/java/com/github/benmanes/caffeine/cache/simulator/policy/Registry.java
+@@ -79,6 +79,8 @@ import com.google.auto.value.AutoValue;
+ import com.google.common.collect.ImmutableSet;
+ import com.typesafe.config.Config;
+ 
++import io.crates.moka.cache.simulator.policy.product.MokaPolicy;
++
+ /**
+  * The registry of caching policies.
+  *
+@@ -229,6 +231,7 @@ public final class Registry {
+     registerMany(CoherencePolicy.class, CoherencePolicy::policies);
+     registerMany(HazelcastPolicy.class, HazelcastPolicy::policies);
+     registerMany(ExpiringMapPolicy.class, ExpiringMapPolicy::policies);
++    register(MokaPolicy.class, MokaPolicy::new);
+   }
+ 
+   @AutoValue

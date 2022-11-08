@@ -1,0 +1,25 @@
+{
+    "rust-analyzer.server.extraEnv": {
+        "CARGO_TARGET_DIR": "target/ra"
+    },
+    "editor.rulers": [
+        85
+    ],
+    "cSpell.words": [
+        "hashbrown",
+        "Hasher",
+        "jboolean",
+        "jclass",
+        "jint",
+        "jlong",
+        "JNICALL",
+        "JNIEXPORT",
+        "jobject",
+        "Ljava",
+        "moka",
+        "unsync"
+    ],
+    "files.watcherExclude": {
+        "**/target": true
+    }
+}
