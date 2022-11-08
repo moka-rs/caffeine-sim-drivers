@@ -123,7 +123,7 @@ out the driver's codes and the "Getting Started" section of the jni crate's
 documentation:
 
 - Driver's source code:
-    - Java part: [MokaPolicy.java](./moka-drier-java/MokaPolicy.java)
+    - Java part: [MokaPolicy.java](./moka-driver-java/MokaPolicy.java)
     - Rust part: [src/lib.rs](./moka-driver-rs/src/lib.rs)
 - jni crate: [Getting Started][jni-crate-getting-started]
 
@@ -132,3 +132,4 @@ documentation:
 ## License
 
 The Apache License 2.0. See [LICENSE](./LICENSE) for details.
+
