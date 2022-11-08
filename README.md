@@ -52,7 +52,6 @@ Build the Rust part of the driver:
 ```console
 $ cd $SIM/caffeine-sim-drivers/moka-driver-rs
 $ cargo build --release
-$ DRV_LIB=$SIM/caffeine-sim-drivers/moka-driver-rs/target/release
 ```
 
 Clone Caffeine's repository, and checkout a specific Git revision:
@@ -107,10 +106,14 @@ Edit `application.conf` and add the following line in the `policies` section:
 Build and run the Caffeine Simulator:
 
 ```console
-## Replace `/path/to/trace/S3.lis` with the real path to the trace file.
+## Replace `/path/to/trace/S3.lis` with the real path to the trace file:
+$ TRACE=arc:/path/to/trace/S3.lis
+
+## The path to the directory containing the dynamic library:
+$ DRV_LIB=$SIM/caffeine-sim-drivers/moka-driver-rs/target/release
 
 $ ./gradlew simulator:simulate -q \
-    -Dcaffeine.simulator.files.paths.0=arc:/path/to/trace/S3.lis \
+    -Dcaffeine.simulator.files.paths.0=$TRACE \
     --maximumSize=100_000,200_000,300_000,400_000,500_000,600_000,700_000,800_000 \
     --jvmArgs="-XX:+UseParallelGC,-Xmx8g,-Djava.library.path=$DRV_LIB" \
     --theme=light
