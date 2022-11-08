@@ -55,11 +55,7 @@ pub extern "system" fn Java_io_crates_moka_cache_simulator_policy_product_MokaPo
     _class: JClass,
     key: jlong,
 ) -> jint {
-    if let Some(v) = shared_cache().get(&key) {
-        v
-    } else {
-        -1
-    }
+    shared_cache().get(&key).unwrap_or(-1)
 }
 
 #[no_mangle]
