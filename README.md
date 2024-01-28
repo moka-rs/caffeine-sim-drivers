@@ -130,12 +130,12 @@ $ cd $SIM/caffeine
 
 ## Run the simulator against the ARC S3 trace file.
 $ ./gradlew simulator:simulate -q \
-    -Dcaffeine.simulator.files.paths.0=arc:$ARC_DIR/S3.lib \
+    -Dcaffeine.simulator.files.paths.0=arc:$ARC_DIR/S3.lis \
     --maximumSize=100_000,200_000,300_000,400_000,500_000,600_000,700_000,800_000 \
-    --jvmArgs="-XX:+UseParallelGC,-Xmx8g,-Djava.library.path=$DRV_LIB" \
+    -PjvmArgs="-XX:+UseParallelGC,-Xmx8g,-Djava.library.path=$DRV_LIB" \
     --theme=light
 
-$ mv $SIM/caffeine/simulator/build/reports/simulator{,-arc-s3}
+$ mv $SIM/caffeine/simulator/build/reports/simulate{,-arc-s3}
 
 ## Run the simulator against the Corda vault service large trace file.
 $ ./gradlew simulator:simulate -q \
@@ -144,7 +144,7 @@ $ ./gradlew simulator:simulate -q \
     -PjvmArgs="-XX:+UseParallelGC,-Xmx8g,-Djava.library.path=$DRV_LIB" \
     --theme=light
 
-$ mv $SIM/caffeine/simulator/build/reports/simulator{,-corda-large}
+$ mv $SIM/caffeine/simulator/build/reports/simulate{,-corda-large}
 ```
 
 ## Modifying the Driver
