@@ -57,7 +57,7 @@ $ cargo build --release
 Clone Caffeine's repository, and checkout a specific Git revision:
 
 ```console
-$ REVISION=6800aa6573361e440c77d58b22e54c16d0ce2505
+$ REVISION=2bcb7ca5260cfc266ed81bc31939cf3cadaadc67
 
 $ cd $SIM
 $ git clone https://github.com/ben-manes/caffeine.git
@@ -98,26 +98,53 @@ Edit `application.conf` and add the following line in the `policies` section:
 
 ```properties
   policies = [
-    # ...
-    product.Moka,
+    opt.Clairvoyant,
+    ...
+    linked.Lru,
+    ...
+    sketch.WindowTinyLfu,
+    ...
+    product.Moka,  # <--- Add this line.
+  ]
+
+  admission = [
+    Always,
+    TinyLfu,
   ]
 ```
 
 Build and run the Caffeine Simulator:
 
 ```console
-## Replace `/path/to/trace/S3.lis` with the real path to the trace file:
-$ TRACE=arc:/path/to/trace/S3.lis
-
-## The path to the directory containing the dynamic library:
+## The path to the directory containing the dynamic library.
 $ DRV_LIB=$SIM/caffeine-sim-drivers/moka-driver-rs/target/release
 
+## The path to the directory containing the ARC trace files.
+## Replace `/path/to/...` with the real path.
+$ ARC_DIR=/path/to/arc-trace-directory
+
+## The path to the directory containing the Corda trace files.
+$ CORDA_DIR=$SIM/caffeine/simulator/src/main/resources/com/github/benmanes/caffeine/cache/simulator/parser/corda/
+
 $ cd $SIM/caffeine
+
+## Run the simulator against the ARC S3 trace file.
 $ ./gradlew simulator:simulate -q \
-      -Dcaffeine.simulator.files.paths.0=$TRACE \
-      --maximumSize=100_000,200_000,300_000,400_000,500_000,600_000,700_000,800_000 \
-      --jvmArgs="-XX:+UseParallelGC,-Xmx8g,-Djava.library.path=$DRV_LIB" \
-      --theme=light
+    -Dcaffeine.simulator.files.paths.0=arc:$ARC_DIR/S3.lib \
+    --maximumSize=100_000,200_000,300_000,400_000,500_000,600_000,700_000,800_000 \
+    --jvmArgs="-XX:+UseParallelGC,-Xmx8g,-Djava.library.path=$DRV_LIB" \
+    --theme=light
+
+$ mv $SIM/caffeine/simulator/build/reports/simulator{,-arc-s3}
+
+## Run the simulator against the Corda vault service large trace file.
+$ ./gradlew simulator:simulate -q \
+    -Dcaffeine.simulator.files.paths.0=corda:$CORDA_DIR/trace_vaultservice_large.gz \
+    --maximumSize=200_000,400_000,600_000,800_000,1_000_000,1_200_000,1_400_000,1_600_000 \
+    -PjvmArgs="-XX:+UseParallelGC,-Xmx8g,-Djava.library.path=$DRV_LIB" \
+    --theme=light
+
+$ mv $SIM/caffeine/simulator/build/reports/simulator{,-corda-large}
 ```
 
 ## Modifying the Driver
