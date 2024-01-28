@@ -1,13 +1,14 @@
 use jni::{
-    objects::JClass,
+    objects::{JClass, JString},
     sys::{jboolean, jint, jlong},
     JNIEnv,
 };
-use moka::sync::Cache;
-use once_cell::sync::OnceCell;
+use moka::{policy::EvictionPolicy, sync::Cache};
 use std::hash::BuildHasher;
 
 const HASH_SEED_KEY: u64 = 982922761776577566;
+
+type CacheTy = Cache<i64, i32, DefaultHasher>;
 
 #[derive(Clone, Default)]
 pub(crate) struct DefaultHasher;
@@ -26,44 +27,73 @@ impl BuildHasher for DefaultHasher {
     }
 }
 
-static CACHE: OnceCell<Cache<i64, i32, DefaultHasher>> = OnceCell::new();
-
-fn shared_cache() -> &'static Cache<i64, i32, DefaultHasher> {
-    CACHE.get().expect("The cache is not initialized")
-}
-
 #[no_mangle]
-pub extern "system" fn Java_io_crates_moka_cache_simulator_policy_product_MokaPolicy_initCache(
-    _env: JNIEnv,
-    _class: JClass,
+pub extern "system" fn Java_io_crates_moka_cache_simulator_policy_product_MokaPolicy_initCache<
+    'local,
+>(
+    mut env: JNIEnv<'local>,
+    _class: JClass<'local>,
     maximum_capacity: jlong,
     is_weighted: jboolean,
-) {
+    eviction_policy: JString<'local>,
+) -> jlong {
     let mut builder = Cache::builder().max_capacity(maximum_capacity as u64);
+
     if is_weighted == 0 {
         builder = builder.initial_capacity(maximum_capacity as usize);
     } else {
         builder = builder.weigher(|_k, v| *v as u32);
     }
-    let cache = builder.build_with_hasher(DefaultHasher::default());
-    let _ = CACHE.set(cache);
+
+    let ep: String = env
+        .get_string(&eviction_policy)
+        .expect("Could not get a Java String")
+        .into();
+    let eviction_policy = match ep.to_ascii_lowercase().as_str() {
+        "tinylfu" => EvictionPolicy::TinyLfu,
+        "lru" => EvictionPolicy::Lru,
+        _ => panic!("Unknown eviction policy: {}", ep),
+    };
+    builder = builder.eviction_policy(eviction_policy);
+
+    let cache: CacheTy = builder.build_with_hasher(DefaultHasher);
+    Box::into_raw(Box::new(cache)) as jlong
 }
 
 #[no_mangle]
-pub extern "system" fn Java_io_crates_moka_cache_simulator_policy_product_MokaPolicy_getFromCacheIfPresent(
-    _env: JNIEnv,
-    _class: JClass,
+pub extern "system" fn Java_io_crates_moka_cache_simulator_policy_product_MokaPolicy_getFromCacheIfPresent<
+    'local,
+>(
+    _env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    cache_ptr: jlong,
     key: jlong,
 ) -> jint {
-    shared_cache().get(&key).unwrap_or(-1)
+    let cache = unsafe { &mut *(cache_ptr as *mut CacheTy) };
+    cache.get(&key).unwrap_or(-1)
 }
 
 #[no_mangle]
-pub extern "system" fn Java_io_crates_moka_cache_simulator_policy_product_MokaPolicy_putToCache(
-    _env: JNIEnv,
-    _class: JClass,
+pub extern "system" fn Java_io_crates_moka_cache_simulator_policy_product_MokaPolicy_putToCache<
+    'local,
+>(
+    _env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    cache_ptr: jlong,
     key: jlong,
     value: jint,
 ) {
-    shared_cache().insert(key as i64, value as i32);
+    let cache = unsafe { &mut *(cache_ptr as *mut CacheTy) };
+    cache.insert(key, value);
+}
+
+#[no_mangle]
+pub extern "system" fn Java_io_crates_moka_cache_simulator_policy_product_MokaPolicy_dropCache<
+    'local,
+>(
+    _env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    cache_ptr: jlong,
+) {
+    let _boxed_cache = unsafe { Box::from_raw(cache_ptr as *mut CacheTy) };
 }
