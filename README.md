@@ -21,8 +21,8 @@ The driver consists of two parts:
    `native` (Rust) functions.
 2. A Rust library that wraps Moka cache and implements the functions called by the
    Java class.
-    - This library uses [jni crate][jni-crate], which provides a safe wrapper around
-      the JNI API.
+    - This library uses [`jni` crate][jni-crate], which provides a safe wrapper
+    - around the JNI API.
 
 The Rust library is compiled into a dynamic library that is loaded into the Java VM
 at runtime.
@@ -150,13 +150,13 @@ $ mv $SIM/caffeine/simulator/build/reports/simulate{,-corda-large}
 ## Modifying the Driver
 
 If you want to modify the driver, e.g., to drive your own cache implementation, check
-out the driver's codes and the "Getting Started" section of the jni crate's
+out the driver's codes and the "Getting Started" section of the `jni` crate's
 documentation:
 
 - Driver's source code:
     - Java part: [MokaPolicy.java](./moka-driver-java/MokaPolicy.java)
     - Rust part: [src/lib.rs](./moka-driver-rs/src/lib.rs)
-- jni crate: [Getting Started][jni-crate-getting-started]
+- `jni` crate: [Getting Started][jni-crate-getting-started]
 
 [jni-crate-getting-started]: https://docs.rs/jni/latest/jni/index.html#getting-started
 
