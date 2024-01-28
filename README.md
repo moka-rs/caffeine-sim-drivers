@@ -22,7 +22,7 @@ The driver consists of two parts:
 2. A Rust library that wraps Moka cache and implements the functions called by the
    Java class.
     - This library uses [`jni` crate][jni-crate], which provides a safe wrapper
-    - around the JNI API.
+      around the JNI API.
 
 The Rust library is compiled into a dynamic library that is loaded into the Java VM
 at runtime.
