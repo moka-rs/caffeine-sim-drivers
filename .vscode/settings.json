@@ -17,6 +17,7 @@
         "jobject",
         "Ljava",
         "moka",
+        "smol",
         "unsync"
     ],
     "files.watcherExclude": {
