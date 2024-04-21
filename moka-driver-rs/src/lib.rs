@@ -50,8 +50,8 @@ pub extern "system" fn Java_io_crates_moka_cache_simulator_policy_product_MokaPo
         .expect("Could not get a Java String")
         .into();
     let eviction_policy = match ep.to_ascii_lowercase().as_str() {
-        "tinylfu" => EvictionPolicy::TinyLfu,
-        "lru" => EvictionPolicy::Lru,
+        "tinylfu" => EvictionPolicy::tiny_lfu(),
+        "lru" => EvictionPolicy::lru(),
         _ => panic!("Unknown eviction policy: {}", ep),
     };
     builder = builder.eviction_policy(eviction_policy);

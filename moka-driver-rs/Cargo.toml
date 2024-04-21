@@ -12,6 +12,5 @@ crate_type = ["cdylib"]
 
 [dependencies]
 jni = "0.21.1"
-# moka = { version = "0.12.5", features = ["sync"] }
-moka = { git = "https://github.com/moka-rs/moka", branch = "lru-policy", features = ["sync"]  }
-xxhash-rust = { version = "0.8.7", features = ["xxh3"] }
+moka = { version = "0.12.7", features = ["sync"] }
+xxhash-rust = { version = "0.8.10", features = ["xxh3"] }

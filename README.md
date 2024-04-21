@@ -33,7 +33,7 @@ at runtime.
 ## Prerequisites
 
 - Java JDK to build the Caffeine Simulator and the Java part of the driver.
-- Rust stable toolchain (1.51 or newer) to build Moka and the Rust part of the driver.
+- Rust stable toolchain (1.75 or newer) to build Moka and the Rust part of the driver.
 
 ## Building the Driver
 
@@ -57,7 +57,7 @@ $ cargo build --release
 Clone Caffeine's repository, and checkout a specific Git revision:
 
 ```console
-$ REVISION=2bcb7ca5260cfc266ed81bc31939cf3cadaadc67
+$ REVISION=4ba734a6cf2f7243c77d2ad8ea9d941f6e36175c
 
 $ cd $SIM
 $ git clone https://github.com/ben-manes/caffeine.git
