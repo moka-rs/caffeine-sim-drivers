@@ -12,5 +12,10 @@ crate_type = ["cdylib"]
 
 [dependencies]
 jni = "0.21.1"
-moka = { version = "0.12.7", features = ["sync"] }
+# moka = { version = "0.12.7", features = ["sync", "future"] }
+moka = { git = "https://gitlab.com/moka-labs/moka-gh249-support-w-tinylfu/moka.git", branch = "w-tinylfu", features = [
+    "sync",
+    "future",
+] }
+smol = "2.0.0"
 xxhash-rust = { version = "0.8.10", features = ["xxh3"] }

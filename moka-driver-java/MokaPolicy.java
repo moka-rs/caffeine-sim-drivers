@@ -23,7 +23,8 @@ public final class MokaPolicy implements Policy {
   }
 
   public MokaPolicy(Config config, String evictionPolicy) {
-    policyStats = new PolicyStats(name() + " (%s)", evictionPolicy);
+    String evictionPolicyDisplayName = evictionPolicy.equals("WindowTinyLFU") ? "Window-TinyLFU, 1%" : evictionPolicy;
+    policyStats = new PolicyStats(name() + " (%s)", evictionPolicyDisplayName);
     BasicSettings settings = new BasicSettings(config);
     long maximumSize = settings.maximumSize();
     boolean isWeighted = false;
@@ -41,6 +42,7 @@ public final class MokaPolicy implements Policy {
 
   public static Set<Policy> policies(Config config) {
     HashSet<MokaPolicy> policies = new HashSet<>();
+    policies.add(new MokaPolicy(config, "WindowTinyLFU"));
     policies.add(new MokaPolicy(config, "TinyLFU"));
     policies.add(new MokaPolicy(config, "LRU"));
     return Collections.unmodifiableSet(policies);

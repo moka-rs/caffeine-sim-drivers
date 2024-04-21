@@ -3,12 +3,10 @@ use jni::{
     sys::{jboolean, jint, jlong},
     JNIEnv,
 };
-use moka::{policy::EvictionPolicy, sync::Cache};
+use moka::{future::Cache as AsyncCache, policy::EvictionPolicy, sync::Cache as SyncCache};
 use std::hash::BuildHasher;
 
 const HASH_SEED_KEY: u64 = 982922761776577566;
-
-type CacheTy = Cache<i64, i32, DefaultHasher>;
 
 #[derive(Clone, Default)]
 pub(crate) struct DefaultHasher;
@@ -37,26 +35,28 @@ pub extern "system" fn Java_io_crates_moka_cache_simulator_policy_product_MokaPo
     is_weighted: jboolean,
     eviction_policy: JString<'local>,
 ) -> jlong {
-    let mut builder = Cache::builder().max_capacity(maximum_capacity as u64);
+    let cache_type = "async";
 
-    if is_weighted == 0 {
-        builder = builder.initial_capacity(maximum_capacity as usize);
-    } else {
-        builder = builder.weigher(|_k, v| *v as u32);
-    }
+    let is_weighted = is_weighted != 0;
 
     let ep: String = env
         .get_string(&eviction_policy)
         .expect("Could not get a Java String")
         .into();
     let eviction_policy = match ep.to_ascii_lowercase().as_str() {
+        "windowtinylfu" => EvictionPolicy::window_tiny_lfu().window_allocation(0.01),
         "tinylfu" => EvictionPolicy::tiny_lfu(),
         "lru" => EvictionPolicy::lru(),
         _ => panic!("Unknown eviction policy: {}", ep),
     };
-    builder = builder.eviction_policy(eviction_policy);
 
-    let cache: CacheTy = builder.build_with_hasher(DefaultHasher);
+    let cache = Cache::new(
+        cache_type,
+        maximum_capacity as u64,
+        is_weighted,
+        eviction_policy,
+    );
+
     Box::into_raw(Box::new(cache)) as jlong
 }
 
@@ -69,7 +69,7 @@ pub extern "system" fn Java_io_crates_moka_cache_simulator_policy_product_MokaPo
     cache_ptr: jlong,
     key: jlong,
 ) -> jint {
-    let cache = unsafe { &mut *(cache_ptr as *mut CacheTy) };
+    let cache = unsafe { &mut *(cache_ptr as *mut Cache) };
     cache.get(&key).unwrap_or(-1)
 }
 
@@ -83,7 +83,7 @@ pub extern "system" fn Java_io_crates_moka_cache_simulator_policy_product_MokaPo
     key: jlong,
     value: jint,
 ) {
-    let cache = unsafe { &mut *(cache_ptr as *mut CacheTy) };
+    let cache = unsafe { &mut *(cache_ptr as *mut Cache) };
     cache.insert(key, value);
 }
 
@@ -95,5 +95,79 @@ pub extern "system" fn Java_io_crates_moka_cache_simulator_policy_product_MokaPo
     _class: JClass<'local>,
     cache_ptr: jlong,
 ) {
-    let _boxed_cache = unsafe { Box::from_raw(cache_ptr as *mut CacheTy) };
+    let _boxed_cache = unsafe { Box::from_raw(cache_ptr as *mut Cache) };
+}
+
+enum Cache {
+    Async(AsyncCache<i64, i32, DefaultHasher>),
+    Sync(SyncCache<i64, i32, DefaultHasher>),
+}
+
+impl Cache {
+    fn new(
+        cache_type: &str,
+        maximum_capacity: u64,
+        is_weighted: bool,
+        eviction_policy: EvictionPolicy,
+    ) -> Self {
+        match cache_type {
+            "async" => Self::build_async_cache(maximum_capacity, is_weighted, eviction_policy),
+            "sync" => Self::build_sync_cache(maximum_capacity, is_weighted, eviction_policy),
+            _ => panic!("Unknown cache type: {}", cache_type),
+        }
+    }
+
+    fn get(&mut self, key: &i64) -> Option<i32> {
+        match self {
+            Cache::Async(cache) => smol::block_on(cache.get(key)),
+            Cache::Sync(cache) => cache.get(key),
+        }
+    }
+
+    fn insert(&mut self, key: i64, value: i32) {
+        match self {
+            Cache::Async(cache) => {
+                smol::block_on(cache.insert(key, value));
+            }
+            Cache::Sync(cache) => {
+                cache.insert(key, value);
+            }
+        }
+    }
+
+    fn build_async_cache(
+        max_capacity: u64,
+        is_weighted: bool,
+        eviction_policy: EvictionPolicy,
+    ) -> Self {
+        let mut builder = AsyncCache::builder()
+            .max_capacity(max_capacity)
+            .eviction_policy(eviction_policy);
+
+        if !is_weighted {
+            builder = builder.initial_capacity(max_capacity as usize);
+        } else {
+            builder = builder.weigher(|_k, v| *v as u32);
+        }
+
+        Self::Async(builder.build_with_hasher(DefaultHasher))
+    }
+
+    fn build_sync_cache(
+        max_capacity: u64,
+        is_weighted: bool,
+        eviction_policy: EvictionPolicy,
+    ) -> Self {
+        let mut builder = SyncCache::builder()
+            .max_capacity(max_capacity)
+            .eviction_policy(eviction_policy);
+
+        if !is_weighted {
+            builder = builder.initial_capacity(max_capacity as usize);
+        } else {
+            builder = builder.weigher(|_k, v| *v as u32);
+        }
+
+        Self::Sync(builder.build_with_hasher(DefaultHasher))
+    }
 }
